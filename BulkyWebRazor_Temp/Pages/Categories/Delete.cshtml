@@ -1,0 +1,35 @@
+﻿@page
+@model BulkyWebRazor_Temp.Pages.Categories.DeleteModel
+=
+
+<form method="post">
+	<input asp-for="Category.Id" hidden />
+	<div class="border p-3 mt-4">
+		<div class="row pb2">
+			<h2 class="text-primary">Delete Category</h2>
+			<hr />
+		</div>
+		<!--自定義錯誤訊息Tag All的表示顯示全部錯誤訊息 ， ModelOnly只顯示相關的錯誤訊息-->
+		@* <div asp-validation-summary="None"></div> *@
+		<div class="mb-3 row p-1">
+			<!--Tag Helper 讓html抓取類別中，DisplayName中所撰寫的名稱-->
+			<label asp-for="Category.Name" class="p-0"></label>
+			<input asp-for="Category.Name" disabled class="form-control" />
+		</div>
+		<div class="mb-3 row p-1">
+			<label asp-for="Category.DisplayOrder" class="p-0"></label>
+			<input asp-for="Category.DisplayOrder" disabled class="form-control" />
+		</div>
+		<div class="row">
+			<div class="col-6" col-md-3>
+				<button type="submit" class="btn btn-danger form-control">Delete</button>
+			</div>
+			<div class="col-6" col-md-3>
+				<a asp-page="/Categories/index" class="btn btn-secondary border form-control">
+					Back to List
+				</a>
+			</div>
+		</div>
+
+	</div>
+</form>

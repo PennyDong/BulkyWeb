@@ -5,7 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Bulky.Utility;
 using Microsoft.AspNetCore.Identity.UI.Services;
-using Stripe;
+using Bulky.DataAccess.DbInitializer;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +18,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 //builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection("Stripe"));
 
+builder.Services.Configure<ECPaySetting>(builder.Configuration.GetSection("ECPay"));
+builder.Services.Configure<FacebookSettings>(builder.Configuration.GetSection("Facebook"));
 //添加人員與角色
 builder.Services.AddIdentity<IdentityUser,IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
 
@@ -28,6 +31,15 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = $"/Identity/Account/AccessDenied";
 });
 
+//facebook
+builder.Services.AddAuthentication().AddFacebook(option =>
+{
+    var facebookSettings = builder.Services.BuildServiceProvider().GetRequiredService<IOptions<FacebookSettings>>().Value;
+    option.AppId = facebookSettings.AppId;
+    option.AppSecret = facebookSettings.AppSecret;
+});
+
+
 //session
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
@@ -37,19 +49,17 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-//facebook
-//builder.Services.AddAuthentication().AddFacebook(option =>
-//{
-//    option.AppId = "";
-//    option.AppSecret = "";
-//});
 
 
+builder.Services.AddScoped<IDbInitializer, DbInitializer>();
 builder.Services.AddRazorPages();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 var app = builder.Build();
-
+/*
+ 每次執行都會啟動，檢查是否有管理者帳號，如果沒有則自動創建。
+ */
+SeedDatabase();
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -61,15 +71,25 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
-//StripeConfiguration.ApiKey = builder.Configuration.GetSection("Stripe:SecretKey").Get<string>();
-
 app.UseRouting();
 app.UseAuthentication(); //身分驗證
 app.UseAuthorization(); //授權
 app.UseSession();
+
+
+
 app.MapRazorPages(); //Razor頁面
 app.MapControllerRoute(
     name: "default",
     pattern: "{area=Customer}/{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
+
+void SeedDatabase()
+{
+    using(var scope = app.Services.CreateScope())
+    {
+        var dbInitializer = scope.ServiceProvider.GetRequiredService<IDbInitializer>();
+        dbInitializer.Initialize();
+    }
+}

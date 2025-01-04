@@ -1,7 +1,7 @@
 ﻿@model ShoppingCartVM
 
 
-<form method="post">
+<form method="post" id="orderForm">
 	<br />
 	<div class="container">
 		<div class="card shadow border-0">
@@ -32,7 +32,7 @@
 									<label>Name</label>
 								</div>
 								<div class="col-9">
-									<input asp-for="OrderHeader.Name" class="form-control"/>
+									<input asp-for="OrderHeader.Name" class="form-control" />
 									<span asp-validation-for="OrderHeader.Name" class="text-danger"></span>
 								</div>
 							</div>
@@ -87,14 +87,15 @@
 								<span class="text-info">Order Summary:</span>
 							</h4>
 							<ul class="list-group mb-3">
-								@foreach(var details in Model.ShoppingCartList){
-								<li class="list-group-item d-flex justify-content-between">
-									<div>
-										<h6 class="my-0">@details.Product.Title</h6>
-										<small class="text-muted">Quantity: @details.Count</small>
-									</div>
-									<span class="text-muted">@((details.Price*details.Count).ToString("c")) </span>
-								</li>
+								@foreach (var details in Model.ShoppingCartList)
+								{
+									<li class="list-group-item d-flex justify-content-between">
+										<div>
+											<h6 class="my-0">@details.Product.Title</h6>
+											<small class="text-muted">Quantity: @details.Count</small>
+										</div>
+										<span class="text-muted">@((details.Price * details.Count).ToString("c")) </span>
+									</li>
 								}
 								<li class="list-group-item d-flex justify-content-between bg-light">
 									<small class="text-info">Total (USD)</small>
@@ -114,10 +115,69 @@
 						</p>
 					</div>
 					<div class="col-12 col-md-4">
-						<button type="submit" value="Place Order" class="btn btn-primary form-control">Place Order</button>
+						<button type="submit" value="Place Order" class="btn btn-primary">Place Order</button>
 					</div>
 				</div>
 			</div>
 		</div>
 	</div>
+
+	
 </form>
+
+
+@* @section Script { *@
+	
+
+@* } *@
+
+<script>
+		 // 攔截表單提交事件，使用 AJAX 提交
+	$("#orderForm").submit(function(event) {
+		event.preventDefault();  // 防止表單默認提交
+
+		// 收集表單數據
+		var formData = $(this).serialize();
+
+		// 使用 AJAX 發送資料
+		$.ajax({
+			url: '/customer/cart/summary', // 後端處理 URL
+			method: 'POST',
+			data: formData,
+			success: function(response) {
+				// 這裡是收到後端回應的地方
+				// 假設後端返回的是支付表單 HTML
+				handlePaymentForm(response);
+			},
+			error: function(xhr, status, error) {
+				alert('訂單提交失敗，請稍後再試。');
+			}
+		});
+	});
+
+
+
+	function handlePaymentForm(paymentFormHtml) {
+		try {
+			// 建立一個容器來插入後端返回的 HTML
+			const formContainer = document.createElement('div');
+			formContainer.innerHTML = paymentFormHtml;
+
+			// 將容器插入到頁面
+			document.body.appendChild(formContainer);
+
+			// 找到表單並提交
+			const paymentForm = document.getElementById('paymentForm');
+			if (paymentForm) {
+				paymentForm.submit(); // 自動提交表單
+			} else {
+				console.error('支付表單未找到！');
+				alert('支付表單加載失敗，請稍後再試。');
+			}
+		} catch (error) {
+			console.error('處理支付表單時發生錯誤：', error);
+			alert('支付頁面加載失敗，請聯繫客服！');
+		}
+	}
+
+</script>

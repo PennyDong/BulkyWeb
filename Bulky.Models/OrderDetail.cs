@@ -19,7 +19,7 @@ namespace Bulky.Models
         public int ProductId { get; set; }
         [ForeignKey("ProductId")]
         [ValidateNever]
-        public Product Product { get; set; }
+        public Product Product { get; set; } //ItemName 
         public int Count { get; set; }
         public double Price {  get; set; }
     }

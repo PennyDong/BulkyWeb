@@ -36,7 +36,7 @@ namespace Bulky.DataAccess.Repository
             var orderFromDb = _db.OrderHeaders.FirstOrDefault(u => u.Id==id);
             if (!string.IsNullOrEmpty(sessionId)) 
             {
-                //orderFromDb.SessionId = sessionId;
+                orderFromDb.SessionId = sessionId;
             }
 
             if (!string.IsNullOrEmpty(paymentIntentId)) 

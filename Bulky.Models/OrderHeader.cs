@@ -11,6 +11,7 @@ namespace Bulky.Models
         [ForeignKey("ApplicationUserId")]
         [ValidateNever]
         public ApplicationUser ApplicationUser { get; set; }
+        //MerchantTradeDate 
         public DateTime OrderDate { get; set; }
         public DateTime shippingDate { get; set; }
         public double OrderTotal { get; set; }
@@ -25,7 +26,7 @@ namespace Bulky.Models
         public DateOnly PaymentDueDate { get; set; }
 
         //對應綠界 : MerchantTradeNo
-        //public string SessionId { get; set; }
+        public string? SessionId { get; set; }
         public string? PaymentIntentId { get; set; }
         [Required]
         public string PhoneNumber { get; set; }
@@ -39,5 +40,7 @@ namespace Bulky.Models
         public string PostalCode { get; set; }
         [Required]
         public string Name { get; set; }
+
+        //ChoosePayment 付款方式
     }
 }

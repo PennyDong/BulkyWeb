@@ -1,0 +1,28 @@
+version: "3"
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-container
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/letsencrypt
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - web
+
+  web:
+    image: bulkyweb:latest
+    container_name: bulkyweb-container
+    environment:
+      - ASPNETCORE_URLS=http://+:80
+    expose:
+      - "80"
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot-container
+    volumes:
+      - ./nginx/ssl:/etc/letsencrypt
+      - ./nginx.conf:/etc/nginx/nginx.conf

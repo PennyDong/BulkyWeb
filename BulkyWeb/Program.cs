@@ -7,18 +7,28 @@ using Bulky.Utility;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Bulky.DataAccess.DbInitializer;
 using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Authentication.OAuth;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+// 註冊Session服務
+builder.Services.AddSession(options =>
+{
+    options.Cookie.HttpOnly = true;
+    options.IdleTimeout = TimeSpan.FromMinutes(300);  // 設定Session過期時間
+    options.Cookie.IsEssential = true;  // 確保此Cookie是必要的
+});
+
+
 builder.Services.AddDbContext<ApplicationDbContext>(options => 
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 //builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection("Stripe"));
-
-builder.Services.Configure<ECPaySetting>(builder.Configuration.GetSection("ECPay"));
+builder.Services.AddTransient<ECPayPaymentClient>();
+builder.Services.Configure<ECPayPaymentClient>(builder.Configuration.GetSection("ECPay"));
 builder.Services.Configure<FacebookSettings>(builder.Configuration.GetSection("Facebook"));
 //添加人員與角色
 builder.Services.AddIdentity<IdentityUser,IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
@@ -37,6 +47,18 @@ builder.Services.AddAuthentication().AddFacebook(option =>
     var facebookSettings = builder.Services.BuildServiceProvider().GetRequiredService<IOptions<FacebookSettings>>().Value;
     option.AppId = facebookSettings.AppId;
     option.AppSecret = facebookSettings.AppSecret;
+
+    option.Events = new OAuthEvents
+    {
+        //當詢問授權時，如果按下取消返回首頁。
+        OnRemoteFailure = context =>
+        {
+            //Console.WriteLine($"Remote failure: {context.Failure?.Message}");
+            context.Response.Redirect($"/");
+            context.HandleResponse();
+            return Task.CompletedTask;
+        }
+    };
 });
 
 
@@ -44,7 +66,7 @@ builder.Services.AddAuthentication().AddFacebook(option =>
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(100);
+    options.IdleTimeout = TimeSpan.FromMinutes(1800);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
